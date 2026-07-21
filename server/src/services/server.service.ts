@@ -14,7 +14,7 @@ import {
   ServerStorageResponseDto,
   UsageByUserDto,
 } from 'src/dtos/server.dto';
-import { StorageFolder, SystemMetadataKey } from 'src/enum';
+import { ImmichWorker, StorageFolder, SystemMetadataKey, UserMetadataKey } from 'src/enum';
 import { UserStatsQueryResponse } from 'src/repositories/user.repository';
 import { BaseService } from 'src/services/base.service';
 import { asHumanReadable } from 'src/utils/bytes';
@@ -23,6 +23,7 @@ import {
   isDuplicateDetectionEnabled,
   isFacialRecognitionEnabled,
   isOcrEnabled,
+  isSceneClassificationEnabled,
   isSmartSearchEnabled,
 } from 'src/utils/misc';
 
@@ -30,6 +31,8 @@ import {
 export class ServerService extends BaseService {
   @OnEvent({ name: 'AppBootstrap' })
   async onBootstrap(): Promise<void> {
+    await this.createDefaultAdmin();
+
     const featureFlags = await this.getFeatures();
     if (featureFlags.configFile) {
       await this.systemMetadataRepository.set(SystemMetadataKey.AdminOnboarding, {
@@ -37,6 +40,48 @@ export class ServerService extends BaseService {
       });
     }
     this.logger.log(`Feature Flags: ${JSON.stringify(await this.getFeatures(), null, 2)}`);
+  }
+
+  private async createDefaultAdmin() {
+    if (this.worker !== ImmichWorker.Api) {
+      return;
+    }
+
+    const { defaultAdmin } = this.configRepository.getEnv();
+    if (!defaultAdmin) {
+      return;
+    }
+
+    if (!defaultAdmin.email || !defaultAdmin.password) {
+      this.logger.warn('Skipping default admin creation because IMMICH_ADMIN_EMAIL or IMMICH_ADMIN_PASSWORD is missing');
+      return;
+    }
+
+    const admin = await this.userRepository.getAdmin();
+    if (admin) {
+      return;
+    }
+
+    const defaultAdminUser = await this.createUser({
+      isAdmin: true,
+      email: defaultAdmin.email,
+      name: defaultAdmin.name,
+      password: defaultAdmin.password,
+      shouldChangePassword: false,
+      storageLabel: 'admin',
+    });
+
+    await Promise.all([
+      this.systemMetadataRepository.set(SystemMetadataKey.AdminOnboarding, {
+        isOnboarded: true,
+      }),
+      this.userRepository.upsertMetadata(defaultAdminUser.id, {
+        key: UserMetadataKey.Onboarding,
+        value: { isOnboarded: true },
+      }),
+    ]);
+
+    this.logger.log(`Created default admin account for ${defaultAdmin.email}`);
   }
 
   async getAboutInfo(): Promise<ServerAboutResponseDto> {
@@ -103,6 +148,7 @@ export class ServerService extends BaseService {
       oauth: oauth.enabled,
       oauthAutoLaunch: oauth.autoLaunch,
       ocr: isOcrEnabled(machineLearning),
+      sceneClassification: isSceneClassificationEnabled(machineLearning),
       passwordLogin: passwordLogin.enabled,
       configFile: !!configFile,
       email: notifications.smtp.enabled,

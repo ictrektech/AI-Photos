@@ -452,4 +452,22 @@ export class AssetJobRepository {
   streamForMigrationJob() {
     return this.db.selectFrom('asset').select(['id']).where('asset.deletedAt', 'is', null).stream();
   }
+
+  @GenerateSql({ params: [], stream: true })
+  streamForSceneClassification(force?: boolean) {
+    return this.db
+      .selectFrom('asset')
+      .select(['asset.id'])
+      .innerJoin('smart_search', 'smart_search.assetId', 'asset.id')
+      .$if(!force, (qb) =>
+        qb
+          .leftJoin('asset_job_status', 'asset_job_status.assetId', 'asset.id')
+          .where((eb) =>
+            eb.or([eb('asset_job_status.scenesDetectedAt', 'is', null), eb('asset_job_status.assetId', 'is', null)]),
+          ),
+      )
+      .where('asset.deletedAt', 'is', null)
+      .where('asset.visibility', '!=', AssetVisibility.Hidden)
+      .stream();
+  }
 }

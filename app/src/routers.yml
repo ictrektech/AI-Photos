@@ -1,0 +1,22 @@
+routers:
+  - id: com-example-ai-album
+    kind: group
+    title:
+      zh-CN: AI相册
+      en: AI Album
+    icon: lucide:image
+    order: 200
+    children:
+      - id: photos
+        kind: page
+        title:
+          zh-CN: 照片
+          en: Photos
+        icon: lucide:camera
+        iframe-src:
+          scheme: http
+          host: self
+          port: 2283
+          path: /
+        embed: false
+        order: 10

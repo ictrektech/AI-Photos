@@ -236,6 +236,8 @@ export class ServerFeaturesDto {
   email!: boolean;
   @ApiProperty({ description: 'Whether OCR is enabled' })
   ocr!: boolean;
+  @ApiProperty({ description: 'Whether scene classification is enabled' })
+  sceneClassification!: boolean;
 }
 
 export interface ReleaseNotification {

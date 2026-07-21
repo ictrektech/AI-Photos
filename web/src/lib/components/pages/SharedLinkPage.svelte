@@ -9,7 +9,7 @@
   import { handleError } from '$lib/utils/handle-error';
   import { navigate } from '$lib/utils/navigation';
   import { sharedLinkLogin, SharedLinkType, type AssetResponseDto, type SharedLinkResponseDto } from '@immich/sdk';
-  import { Button, Logo, PasswordInput } from '@immich/ui';
+  import { Button, PasswordInput } from '@immich/ui';
   import { onDestroy, tick } from 'svelte';
   import { t } from 'svelte-i18n';
 
@@ -41,7 +41,7 @@
       sharedLink = await sharedLinkLogin({ key, slug, sharedLinkLoginDto: { password } });
       setSharedLink(sharedLink);
       passwordRequired = false;
-      title = (sharedLink.album ? sharedLink.album.albumName : $t('public_share')) + ' - Immich';
+      title = (sharedLink.album ? sharedLink.album.albumName : $t('public_share')) + ' - Photos';
       description =
         sharedLink.description ||
         $t('shared_photos_and_videos_count', { values: { assetCount: sharedLink.assets.length } });
@@ -89,9 +89,7 @@
   <header>
     <ControlAppBar showBackButton={false}>
       {#snippet leading()}
-        <a data-sveltekit-preload-data="hover" class="ms-4" href="/">
-          <Logo variant="inline" />
-        </a>
+        <a data-sveltekit-preload-data="hover" class="ms-4 font-semibold text-primary" href="/">Photos</a>
       {/snippet}
 
       {#snippet trailing()}

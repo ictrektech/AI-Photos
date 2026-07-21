@@ -84,6 +84,7 @@ interface AssetBuilderOptions {
   visibility?: AssetVisibility;
   withCoordinates?: boolean;
   bbox?: BoundingBox;
+  sceneLabel?: string;
 }
 
 export interface TimeBucketOptions extends AssetBuilderOptions {
@@ -301,6 +302,7 @@ export class AssetRepository {
               facesRecognizedAt: eb.ref('excluded.facesRecognizedAt'),
               metadataExtractedAt: eb.ref('excluded.metadataExtractedAt'),
               ocrAt: eb.ref('excluded.ocrAt'),
+              scenesDetectedAt: eb.ref('excluded.scenesDetectedAt'),
             },
             values[0],
           ),
@@ -725,6 +727,11 @@ export class AssetRepository {
               .where('album_asset.albumId', '=', asUuid(options.albumId!)),
           )
           .$if(!!options.personId, (qb) => hasPeople(qb, [options.personId!]))
+          .$if(!!options.sceneLabel, (qb) =>
+            qb
+              .innerJoin('scene_search', 'scene_search.assetId', 'asset.id')
+              .where('scene_search.sceneLabel', '=', options.sceneLabel!),
+          )
           .$if(!!options.withStacked, (qb) =>
             qb
               .leftJoin('stack', (join) =>
@@ -816,6 +823,11 @@ export class AssetRepository {
             ),
           )
           .$if(!!options.personId, (qb) => hasPeople(qb, [options.personId!]))
+          .$if(!!options.sceneLabel, (qb) =>
+            qb
+              .innerJoin('scene_search', 'scene_search.assetId', 'asset.id')
+              .where('scene_search.sceneLabel', '=', options.sceneLabel!),
+          )
           .$if(!!options.userIds, (qb) => qb.where('asset.ownerId', '=', anyUuid(options.userIds!)))
           .$if(options.isFavorite !== undefined, (qb) => qb.where('asset.isFavorite', '=', options.isFavorite!))
           .$if(!!options.withStacked, (qb) =>

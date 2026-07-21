@@ -217,6 +217,8 @@ export class JobService extends BaseService {
         if (item.data.source === 'upload') {
           await this.jobRepository.queue({ name: JobName.AssetDetectDuplicates, data: item.data });
         }
+        // Trigger scene classification after CLIP embedding is available
+        await this.jobRepository.queue({ name: JobName.SceneClassification, data: item.data });
         break;
       }
     }

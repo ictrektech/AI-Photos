@@ -6,6 +6,7 @@
   import SingleGridRow from '$lib/components/shared-components/single-grid-row.svelte';
   import { Route } from '$lib/route';
   import { getAssetMediaUrl, getPeopleThumbnailUrl } from '$lib/utils';
+  import { getSceneLabel } from '$lib/utils/scene-label';
   import { AssetMediaSize, type SearchExploreResponseDto } from '@immich/sdk';
   import { Icon } from '@immich/ui';
   import { mdiHeart } from '@mdi/js';
@@ -25,6 +26,7 @@
 
   let places = $derived(getFieldItems(data.items, 'exifInfo.city'));
   let people = $state(data.response.people);
+  let scenes = $derived(getFieldItems(data.scenes, 'scene'));
 
   let hasPeople = $derived(data.response.total > 0);
 
@@ -107,7 +109,39 @@
     </div>
   {/if}
 
-  {#if !hasPeople && places.length === 0}
+  {#if scenes.length > 0}
+    <div class="mb-6 mt-2">
+      <div class="flex justify-between">
+        <p class="mb-4 font-medium dark:text-immich-dark-fg">{$t('scenes')}</p>
+        <a
+          href={Route.scenes()}
+          class="pe-4 text-sm font-medium hover:text-immich-primary dark:text-immich-dark-fg dark:hover:text-immich-dark-primary"
+          draggable="false">{$t('view_all')}</a
+        >
+      </div>
+      <SingleGridRow class="grid grid-flow-col md:grid-auto-fill-28 grid-auto-fill-20 gap-x-4">
+        {#snippet children({ itemCount })}
+          {#each scenes.slice(0, itemCount) as item (item.value)}
+            <a class="text-center relative" href={Route.search({ sceneLabel: item.value })} draggable="false">
+              <ImageThumbnail
+                circle
+                shadow
+                url={getAssetMediaUrl({ id: item.data.id, size: AssetMediaSize.Thumbnail })}
+                altText={getSceneLabel(item.value, $t)}
+                title={getSceneLabel(item.value, $t)}
+                widthStyle="100%"
+              />
+              <p class="mt-2 text-ellipsis text-sm font-medium dark:text-white">
+                {getSceneLabel(item.value, $t)}
+              </p>
+            </a>
+          {/each}
+        {/snippet}
+      </SingleGridRow>
+    </div>
+  {/if}
+
+  {#if !hasPeople && places.length === 0 && scenes.length === 0}
     <EmptyPlaceholder text={$t('no_explore_results_message')} class="mt-10 mx-auto" />
   {/if}
 </UserPageLayout>

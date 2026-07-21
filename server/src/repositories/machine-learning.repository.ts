@@ -3,6 +3,7 @@ import { Duration } from 'luxon';
 import { readFile } from 'node:fs/promises';
 import { MachineLearningConfig } from 'src/config';
 import { CLIPConfig } from 'src/dtos/model-config.dto';
+import { EventRepository } from 'src/repositories/event.repository';
 import { LoggingRepository } from 'src/repositories/logging.repository';
 
 export interface BoundingBox {
@@ -91,7 +92,10 @@ export class MachineLearningRepository {
     return this._config;
   }
 
-  constructor(private logger: LoggingRepository) {
+  constructor(
+    private logger: LoggingRepository,
+    private eventRepository: EventRepository,
+  ) {
     this.logger.setContext(MachineLearningRepository.name);
   }
 
@@ -146,11 +150,18 @@ export class MachineLearningRepository {
   }
 
   private setHealthy(url: string, healthy: boolean) {
-    if (this.healthyMap[url] !== healthy) {
+    const wasHealthy = this.healthyMap[url];
+    if (wasHealthy !== healthy) {
       this.logger.log(`Machine learning server became ${healthy ? 'healthy' : 'unhealthy'} (${url}).`);
     }
 
     this.healthyMap[url] = healthy;
+
+    if (healthy && wasHealthy !== true) {
+      void this.eventRepository.emit('MachineLearningServerHealthy', { url }).catch((error: Error | any) => {
+        this.logger.warn(`Failed to emit machine learning health event: ${error.message}`);
+      });
+    }
   }
 
   private isHealthy(url: string) {

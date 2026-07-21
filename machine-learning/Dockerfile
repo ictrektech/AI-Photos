@@ -1,5 +1,8 @@
 ARG DEVICE=cpu
 
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
+
 FROM python:3.11-bookworm@sha256:aa23850b91cb4c7faedac8ca9aa74ddc6eb03529a519145a589a7f35df4c5927 AS builder-cpu
 
 FROM python:3.13-slim-trixie@sha256:3de9a8d7aedbb7984dc18f2dff178a7850f16c1ae7c34ba9d7ecc23d0755e35f AS builder-openvino
@@ -7,6 +10,8 @@ FROM python:3.13-slim-trixie@sha256:3de9a8d7aedbb7984dc18f2dff178a7850f16c1ae7c3
 FROM builder-cpu AS builder-cuda
 
 FROM builder-cpu AS builder-armnn
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
 
 # renovate: datasource=github-releases depName=ARM-software/armnn
 ARG ARMNN_VERSION="v24.05"
@@ -14,6 +19,7 @@ ARG ARMNN_VERSION="v24.05"
 ENV ARMNN_PATH=/opt/armnn
 COPY ann /opt/ann
 RUN mkdir /opt/armnn && \
+    export http_proxy=${HTTP_PROXY} && export https_proxy=${HTTPS_PROXY} && \
     curl -SL "https://github.com/ARM-software/armnn/releases/download/${ARMNN_VERSION}/ArmNN-linux-aarch64.tar.gz" | tar -zx -C /opt/armnn && \
     cd /opt/ann && \
     sh build.sh
@@ -27,16 +33,20 @@ FROM rocm/dev-ubuntu-24.04:7.2-complete@sha256:86e11093b4a7ec2a79b1b6701d10e840a
 FROM builder-${DEVICE} AS builder
 
 ARG DEVICE
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     VIRTUAL_ENV=/opt/venv
 
-RUN apt-get update && apt-get install -y --no-install-recommends g++
+RUN export http_proxy=${HTTP_PROXY} && export https_proxy=${HTTPS_PROXY} && \
+    apt-get update && apt-get install -y --no-install-recommends g++
 
 COPY --from=ghcr.io/astral-sh/uv:0.8.15@sha256:a5727064a0de127bdb7c9d3c1383f3a9ac307d9f2d8a391edc7896c54289ced0 /uv /uvx /bin/
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    export http_proxy=${HTTP_PROXY} && export https_proxy=${HTTPS_PROXY} && \
     uv sync --frozen --extra ${DEVICE} --no-dev --no-editable --no-install-project --compile-bytecode --no-progress --active --link-mode copy
 
 FROM python:3.11-slim-bookworm@sha256:04cd27899595a99dfe77709d96f08876bf2ee99139ee2f0fe9ac948005034e5b AS prod-cpu
@@ -45,8 +55,11 @@ ENV LD_PRELOAD=/usr/lib/libmimalloc.so.2 \
     MACHINE_LEARNING_MODEL_ARENA=false
 
 FROM python:3.13-slim-trixie@sha256:3de9a8d7aedbb7984dc18f2dff178a7850f16c1ae7c34ba9d7ecc23d0755e35f AS prod-openvino
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
 
-RUN apt-get update && \
+RUN export http_proxy=${HTTP_PROXY} && export https_proxy=${HTTPS_PROXY} && \
+    apt-get update && \
     apt-get install --no-install-recommends -yqq ocl-icd-libopencl1 wget && \
     wget -nv https://github.com/intel/intel-graphics-compiler/releases/download/v2.28.4/intel-igc-core-2_2.28.4+20760_amd64.deb && \
     wget -nv https://github.com/intel/intel-graphics-compiler/releases/download/v2.28.4/intel-igc-opencl-2_2.28.4+20760_amd64.deb && \
@@ -62,11 +75,14 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 FROM nvidia/cuda:12.2.2-runtime-ubuntu22.04@sha256:94c1577b2cd9dd6c0312dc04dff9cb2fdce2b268018abc3d7c2dbcacf1155000 AS prod-cuda
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
 
 ENV LD_PRELOAD=/usr/lib/libmimalloc.so.2 \
     MACHINE_LEARNING_MODEL_ARENA=false
 
-RUN apt-get update && \
+RUN export http_proxy=${HTTP_PROXY} && export https_proxy=${HTTPS_PROXY} && \
+    apt-get update && \
     # Pascal support was dropped in 9.11
     apt-get install --no-install-recommends -yqq libcudnn9-cuda-12=9.10.2.21-1 && \
     apt-get clean && \
@@ -77,18 +93,24 @@ COPY --from=builder-cuda /usr/local/lib/python3.11 /usr/local/lib/python3.11
 COPY --from=builder-cuda /usr/local/lib/libpython3.11.so /usr/local/lib/libpython3.11.so
 
 FROM rocm/dev-ubuntu-24.04:7.2-complete@sha256:86e11093b4a7ec2a79b1b6701d10e840a6994f21c7e05929b51eb9be361c683a AS prod-rocm
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
 
-RUN apt-get update && apt-get install --no-install-recommends -yqq migraphx miopen-hip && \
+RUN export http_proxy=${HTTP_PROXY} && export https_proxy=${HTTPS_PROXY} && \
+    apt-get update && apt-get install --no-install-recommends -yqq migraphx miopen-hip && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 FROM prod-cpu AS prod-armnn
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
 
 ENV LD_LIBRARY_PATH=/opt/armnn \
     LD_PRELOAD=/usr/lib/libmimalloc.so.2 \
     MACHINE_LEARNING_MODEL_ARENA=false
 
-RUN apt-get update && apt-get install -y --no-install-recommends ocl-icd-libopencl1 mesa-opencl-icd libgomp1 && \
+RUN export http_proxy=${HTTP_PROXY} && export https_proxy=${HTTPS_PROXY} && \
+    apt-get update && apt-get install -y --no-install-recommends ocl-icd-libopencl1 mesa-opencl-icd libgomp1 && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir --parents /etc/OpenCL/vendors && \
     echo "/usr/lib/libmali.so" > /etc/OpenCL/vendors/mali.icd && \
@@ -105,6 +127,8 @@ COPY --from=builder-armnn \
     /opt/armnn/
 
 FROM prod-cpu AS prod-rknn
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
 
 # renovate: datasource=github-tags depName=airockchip/rknn-toolkit2
 ARG RKNN_TOOLKIT_VERSION="v2.3.0"
@@ -117,8 +141,11 @@ ADD --checksum=sha256:73993ed4b440460825f21611731564503cc1d5a0c123746477da6cd574
 FROM prod-${DEVICE} AS prod
 
 ARG DEVICE
+ARG HTTP_PROXY
+ARG HTTPS_PROXY
 
-RUN apt-get update && \
+RUN export http_proxy=${HTTP_PROXY} && export https_proxy=${HTTPS_PROXY} && \
+    apt-get update && \
     apt-get install -y --no-install-recommends tini ccache libgl1 libglib2.0-0 libgomp1 $(if ! [ "$DEVICE" = "openvino" ] && ! [ "$DEVICE" = "rocm" ]; then echo "libmimalloc2.0"; fi) && \
     apt-get autoremove -yqq && \
     apt-get clean && \

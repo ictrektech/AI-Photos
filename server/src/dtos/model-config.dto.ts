@@ -81,3 +81,25 @@ export class OcrConfig extends ModelConfig {
   })
   minRecognitionScore!: number;
 }
+
+export class SceneClassificationConfig extends TaskConfig {
+  @IsNumber()
+  @Min(0)
+  @Max(1)
+  @Type(() => Number)
+  @ApiProperty({ type: 'number', format: 'double', description: 'Minimum confidence score for scene classification' })
+  minScore!: number;
+
+  @IsNumber()
+  @Min(1)
+  @Max(10)
+  @Type(() => Number)
+  @ApiProperty({ type: 'integer', description: 'Number of top labels to store per asset' })
+  topLabels!: number;
+
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  @ApiProperty({ type: 'integer', description: 'Minimum number of assets per scene label to show in explore page' })
+  minAssetsPerField!: number;
+}

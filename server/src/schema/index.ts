@@ -61,6 +61,7 @@ import { SessionTable } from 'src/schema/tables/session.table';
 import { SharedLinkAssetTable } from 'src/schema/tables/shared-link-asset.table';
 import { SharedLinkTable } from 'src/schema/tables/shared-link.table';
 import { SmartSearchTable } from 'src/schema/tables/smart-search.table';
+import { SceneSearchTable } from 'src/schema/tables/scene-search.table';
 import { StackAuditTable } from 'src/schema/tables/stack-audit.table';
 import { StackTable } from 'src/schema/tables/stack.table';
 import { SessionSyncCheckpointTable } from 'src/schema/tables/sync-checkpoint.table';
@@ -111,6 +112,7 @@ export class ImmichDatabase {
     NaturalEarthCountriesTable,
     NotificationTable,
     OcrSearchTable,
+    SceneSearchTable,
     PartnerAuditTable,
     PartnerTable,
     PersonTable,
@@ -231,6 +233,7 @@ export interface DB {
   shared_link_asset: SharedLinkAssetTable;
 
   smart_search: SmartSearchTable;
+  scene_search: SceneSearchTable;
 
   stack: StackTable;
   stack_audit: StackAuditTable;

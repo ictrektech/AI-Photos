@@ -77,8 +77,8 @@
 
   let showNavigationLoadingBar = $state(false);
 
-  const getMyImmichLink = () => {
-    return new URL(page.url.pathname + page.url.search, 'https://my.immich.app');
+  const getShareablePageLink = () => {
+    return new URL(page.url.pathname + page.url.search, page.url.origin);
   };
 
   toastManager.setOptions({ class: 'top-16 fixed' });
@@ -86,7 +86,7 @@
   onMount(() => {
     const element = document.querySelector('#stencil');
     element?.remove();
-    // if the browser theme changes, changes the Immich theme too
+    // Keep the app theme in sync with the browser theme.
   });
 
   eventManager.emit('AppInit');
@@ -193,7 +193,7 @@
 <VersionAnnouncement />
 
 <svelte:head>
-  <title>{page.data.meta?.title || 'Web'} - Immich</title>
+  <title>{page.data.meta?.title || 'Web'} - Photos</title>
   <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
   <meta name="theme-color" content="white" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="black" media="(prefers-color-scheme: dark)" />
@@ -234,7 +234,7 @@
 <svelte:document
   use:shortcut={{
     shortcut: { ctrl: true, shift: true, key: 'm' },
-    onShortcut: () => copyToClipboard(getMyImmichLink().toString()),
+    onShortcut: () => copyToClipboard(getShareablePageLink().toString()),
   }}
 />
 

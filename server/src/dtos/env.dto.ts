@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { IsEnum, IsInt, IsString, Matches } from 'class-validator';
+import { IsEmail, IsEnum, IsInt, IsNotEmpty, IsString, Matches } from 'class-validator';
 import { ImmichEnvironment, LogFormat, LogLevel } from 'src/enum';
 import { IsIPRange, Optional, ValidateBoolean } from 'src/validation';
 
@@ -132,6 +132,20 @@ export class EnvDto {
 
   @ValidateBoolean({ optional: true })
   IMMICH_ALLOW_SETUP?: boolean;
+
+  @IsEmail({ require_tld: false })
+  @Optional()
+  IMMICH_ADMIN_EMAIL?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Optional()
+  IMMICH_ADMIN_PASSWORD?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Optional()
+  IMMICH_ADMIN_NAME?: string;
 
   @IsIPRange({ requireCIDR: false }, { each: true })
   @Transform(({ value }) =>

@@ -132,7 +132,7 @@ describe(SmartInfoService.name, () => {
 
       await sut.onConfigUpdate({
         newConfig: {
-          machineLearning: { clip: { modelName: 'ViT-B-32__openai', enabled: true }, enabled: true },
+          machineLearning: { clip: { modelName: 'ViT-B-16-SigLIP2__webli', enabled: true }, enabled: true },
         } as SystemConfig,
         oldConfig: {
           machineLearning: { clip: { modelName: 'ViT-B-16__openai', enabled: true }, enabled: true },
@@ -206,7 +206,7 @@ describe(SmartInfoService.name, () => {
 
       expect(mocks.machineLearning.encodeImage).toHaveBeenCalledWith(
         asset.files[0].path,
-        expect.objectContaining({ modelName: 'ViT-B-32__openai' }),
+        expect.objectContaining({ modelName: 'ViT-B-16-SigLIP2__webli' }),
       );
       expect(mocks.search.upsert).toHaveBeenCalledWith(asset.id, '[0.01, 0.02, 0.03]');
     });
@@ -240,10 +240,10 @@ describe(SmartInfoService.name, () => {
 
       expect(await sut.handleEncodeClip({ id: asset.id })).toEqual(JobStatus.Success);
 
-      expect(mocks.database.wait).toHaveBeenCalledWith(512);
+      expect(mocks.database.wait).toHaveBeenCalledWith(768);
       expect(mocks.machineLearning.encodeImage).toHaveBeenCalledWith(
         asset.files[0].path,
-        expect.objectContaining({ modelName: 'ViT-B-32__openai' }),
+        expect.objectContaining({ modelName: 'ViT-B-16-SigLIP2__webli' }),
       );
       expect(mocks.search.upsert).toHaveBeenCalledWith(asset.id, '[0.01, 0.02, 0.03]');
     });

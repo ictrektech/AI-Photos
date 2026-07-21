@@ -26,6 +26,8 @@ import { PartnerService } from 'src/services/partner.service';
 import { PersonService } from 'src/services/person.service';
 import { PluginService } from 'src/services/plugin.service';
 import { QueueService } from 'src/services/queue.service';
+import { SceneClassificationService } from 'src/services/scene-classification.service';
+import { SceneService } from 'src/services/scene.service';
 import { SearchService } from 'src/services/search.service';
 import { ServerService } from 'src/services/server.service';
 import { SessionService } from 'src/services/session.service';
@@ -76,6 +78,8 @@ export const services = [
   PersonService,
   PluginService,
   QueueService,
+  SceneClassificationService,
+  SceneService,
   SearchService,
   ServerService,
   SessionService,

@@ -88,6 +88,10 @@ export interface SearchOcrOptions {
   ocr?: string;
 }
 
+export interface SearchSceneOptions {
+  sceneLabel?: string;
+}
+
 export interface SearchPeopleOptions {
   personIds?: string[];
 }
@@ -119,7 +123,8 @@ type BaseAssetSearchOptions = SearchDateOptions &
   SearchPeopleOptions &
   SearchTagOptions &
   SearchAlbumOptions &
-  SearchOcrOptions;
+  SearchOcrOptions &
+  SearchSceneOptions;
 
 export type AssetSearchOptions = BaseAssetSearchOptions & SearchRelationOptions;
 

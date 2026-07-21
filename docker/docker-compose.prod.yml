@@ -33,26 +33,30 @@ services:
     healthcheck:
       disable: false
 
-  immich-machine-learning:
-    container_name: immich_machine_learning
-    image: immich-machine-learning:latest
-    # extends:
-    #   file: hwaccel.ml.yml
-    #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference
-    build:
-      context: ../machine-learning
-      dockerfile: Dockerfile
-      args:
-        - DEVICE=cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference
-    ports:
-      - 3003:3003
-    volumes:
-      - model-cache:/cache
-    env_file:
-      - .env
-    restart: always
-    healthcheck:
-      disable: false
+  # immich-machine-learning:
+  #   container_name: immich_machine_learning
+  #   image: immich-ml:latest
+  #   environment:
+  #     - http_proxy=http://192.168.1.86:7890
+  #     - https_proxy=http://192.168.1.86:7890
+
+  #   # extends:
+  #   #   file: hwaccel.ml.yml
+  #   #   service: cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference
+  #   build:
+  #     context: ../machine-learning
+  #     dockerfile: Dockerfile
+  #     args:
+  #       - DEVICE=cpu # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference
+  #   ports:
+  #     - 3003:3003
+  #   volumes:
+  #     - model-cache:/cache
+  #   env_file:
+  #     - .env
+  #   restart: always
+  #   healthcheck:
+  #     disable: false
 
   redis:
     container_name: immich_redis
@@ -74,7 +78,7 @@ services:
     volumes:
       - ${UPLOAD_LOCATION}/postgres:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - 5433:5432
     shm_size: 128mb
     restart: always
     healthcheck:
@@ -84,7 +88,7 @@ services:
   immich-prometheus:
     container_name: immich_prometheus
     ports:
-      - 9090:9090
+      - 9091:9090
     image: prom/prometheus@sha256:dda13e28bf95a5e5ca5b8ed56852006094c1c8e8871d9c9dbeed30aa6e55271f
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml

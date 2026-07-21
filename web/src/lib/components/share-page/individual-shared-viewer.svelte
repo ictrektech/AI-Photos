@@ -10,14 +10,13 @@
   import type { Viewport } from '$lib/managers/timeline-manager/types';
   import { Route } from '$lib/route';
   import { dragAndDropFilesStore } from '$lib/stores/drag-and-drop-files.store';
-  import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { handlePromiseError } from '$lib/utils';
   import { downloadArchive } from '$lib/utils/asset-utils';
   import { fileUploadHandler, openFileUploadDialog } from '$lib/utils/file-uploader';
   import { handleError } from '$lib/utils/handle-error';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
   import { getAssetInfo, type SharedLinkResponseDto } from '@immich/sdk';
-  import { IconButton, Logo, toastManager } from '@immich/ui';
+  import { IconButton, toastManager } from '@immich/ui';
   import { mdiArrowLeft, mdiDownload, mdiFileImagePlusOutline, mdiSelectAll } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import ControlAppBar from '../shared-components/control-app-bar.svelte';
@@ -42,7 +41,7 @@
   });
 
   const downloadAssets = async () => {
-    await downloadArchive(`immich-shared.zip`, { assetIds: assets.map((asset) => asset.id) });
+    await downloadArchive(`shared-photos.zip`, { assetIds: assets.map((asset) => asset.id) });
   };
 
   const handleUploadAssets = async (files: File[] = []) => {
@@ -90,7 +89,7 @@
           onclick={handleSelectAll}
         />
         {#if sharedLink?.allowDownload}
-          <DownloadAction filename="immich-shared.zip" />
+          <DownloadAction filename="shared-photos.zip" />
         {/if}
         {#if isOwned}
           <RemoveFromSharedLink bind:sharedLink />
@@ -99,9 +98,7 @@
     {:else}
       <ControlAppBar onClose={() => goto(Route.photos())} backIcon={mdiArrowLeft} showBackButton={false}>
         {#snippet leading()}
-          <a data-sveltekit-preload-data="hover" class="ms-4" href="/">
-            <Logo variant={mediaQueryManager.maxMd ? 'icon' : 'inline'} class="min-w-10" />
-          </a>
+          <a data-sveltekit-preload-data="hover" class="ms-4 font-semibold text-primary" href="/">Photos</a>
         {/snippet}
 
         {#snippet trailing()}

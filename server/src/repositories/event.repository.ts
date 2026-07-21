@@ -38,6 +38,9 @@ type EventMap = {
   ];
   ConfigValidate: [{ newConfig: SystemConfig; oldConfig: SystemConfig }];
 
+  // machine learning events
+  MachineLearningServerHealthy: [{ url: string }];
+
   // album events
   AlbumUpdate: [{ id: string; recipientId: string }];
   AlbumInvite: [{ id: string; userId: string }];

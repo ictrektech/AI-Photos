@@ -15,12 +15,16 @@
   import DeleteAssets from '$lib/components/timeline/actions/DeleteAssetsAction.svelte';
   import DownloadAction from '$lib/components/timeline/actions/DownloadAction.svelte';
   import FavoriteAction from '$lib/components/timeline/actions/FavoriteAction.svelte';
+  import SelectAllAssets from '$lib/components/timeline/actions/SelectAllAction.svelte';
   import SetVisibilityAction from '$lib/components/timeline/actions/SetVisibilityAction.svelte';
   import TagAction from '$lib/components/timeline/actions/TagAction.svelte';
   import AssetSelectControlBar from '$lib/components/timeline/AssetSelectControlBar.svelte';
+  import Timeline from '$lib/components/timeline/Timeline.svelte';
   import { QueryParameter } from '$lib/constants';
   import { assetMultiSelectManager } from '$lib/managers/asset-multi-select-manager.svelte';
   import { featureFlagsManager } from '$lib/managers/feature-flags-manager.svelte';
+  import { TimelineManager } from '$lib/managers/timeline-manager/timeline-manager.svelte';
+  import type { TimelineAsset, TimelineManagerOptions } from '$lib/managers/timeline-manager/types';
   import type { Viewport } from '$lib/managers/timeline-manager/types';
   import { Route } from '$lib/route';
   import { getAssetBulkActions } from '$lib/services/asset.service';
@@ -30,6 +34,7 @@
   import { parseUtcDate } from '$lib/utils/date-time';
   import { handleError } from '$lib/utils/handle-error';
   import { isAlbumsRoute, isPeopleRoute } from '$lib/utils/navigation';
+  import { getSceneLabel } from '$lib/utils/scene-label';
   import { toTimelineAsset } from '$lib/utils/timeline-util';
   import {
     type AlbumResponseDto,
@@ -39,6 +44,7 @@
     type MetadataSearchDto,
     searchAssets,
     searchSmart,
+    AssetVisibility,
     type SmartSearchDto,
   } from '@immich/sdk';
   import { ActionButton, CommandPaletteDefaultProvider, Icon, IconButton, LoadingSpinner } from '@immich/ui';
@@ -48,6 +54,7 @@
 
   const viewport: Viewport = $state({ width: 0, height: 0 });
   let searchResultsElement: HTMLElement | undefined = $state();
+  let timelineManager = $state<TimelineManager>() as TimelineManager;
 
   // The GalleryViewer pushes it's own history state, which causes weird
   // behavior for history.back(). To prevent that we store the previous page
@@ -65,6 +72,12 @@
   let searchQuery = $derived(page.url.searchParams.get(QueryParameter.QUERY));
   let smartSearchEnabled = $derived(featureFlagsManager.value.smartSearch);
   let terms = $derived<SearchTerms>(searchQuery ? JSON.parse(searchQuery) : {});
+  let isSceneLabelSearch = $derived(typeof terms.sceneLabel === 'string' && terms.sceneLabel.length > 0);
+  let sceneTimelineOptions = $derived<TimelineManagerOptions & { sceneLabel?: string }>({
+    visibility: AssetVisibility.Timeline,
+    withStacked: true,
+    ...(typeof terms.sceneLabel === 'string' ? { sceneLabel: terms.sceneLabel } : {}),
+  });
 
   $effect(() => {
     // we want this to *only* be reactive on `terms`
@@ -113,6 +126,28 @@
     onAssetDelete(assetIds);
   };
 
+  const handleTimelineAssetsRemove = (assetIds: string[]) => {
+    timelineManager.removeAssets(assetIds);
+  };
+
+  const handleTimelineSetVisibility = (assetIds: string[]) => {
+    assetMultiSelectManager.clear();
+    handleTimelineAssetsRemove(assetIds);
+  };
+
+  const handleTimelineUndoDelete = (assets: TimelineAsset[]) => {
+    timelineManager.upsertAssets(assets);
+  };
+
+  const handleEscape = async () => {
+    if (assetMultiSelectManager.selectionActive) {
+      assetMultiSelectManager.clear();
+      return;
+    }
+
+    await goto(previousRoute);
+  };
+
   const handleSelectAll = () => {
     assetMultiSelectManager.selectAssets(searchResultAssets.map((asset) => toTimelineAsset(asset)));
   };
@@ -121,6 +156,10 @@
     nextPage = 1;
     searchResultAssets = [];
     searchResultAlbums = [];
+    if (isSceneLabelSearch) {
+      isLoading = false;
+      return;
+    }
     await loadNextPage(true);
   }
 
@@ -187,8 +226,17 @@
       description: $t('description'),
       queryAssetId: $t('query_asset_id'),
       ocr: $t('ocr'),
+      sceneLabel: $t('scenes'),
     };
     return keyMap[key] || key;
+  }
+
+  function getHumanReadableSearchValue(key: keyof SearchTerms, value: SearchTerms[keyof SearchTerms]) {
+    if (key === 'sceneLabel' && typeof value === 'string') {
+      return getSceneLabel(value, $t);
+    }
+
+    return value;
   }
 
   async function getPersonName(personIds: string[]) {
@@ -240,7 +288,7 @@
 
 <OnEvents {onAlbumAddAssets} />
 
-{#if terms}
+{#if terms && !isSceneLabelSearch}
   <section
     id="search-chips"
     class="mt-24 text-center w-full flex gap-5 place-content-center place-items-center flex-wrap px-24"
@@ -272,7 +320,7 @@
             {:else if value === null || value === ''}
               {$t('unknown')}
             {:else}
-              {value}
+              {getHumanReadableSearchValue(searchKey as keyof SearchTerms, value)}
             {/if}
           </div>
         {/if}
@@ -281,43 +329,103 @@
   </section>
 {/if}
 
-<section
-  class="mb-12 bg-immich-bg dark:bg-immich-dark-bg m-4 max-h-screen"
-  bind:clientHeight={viewport.height}
-  bind:clientWidth={viewport.width}
-  bind:this={searchResultsElement}
->
-  <section id="search-content">
-    {#if searchResultAssets.length > 0}
-      <GalleryViewer
-        assets={searchResultAssets}
-        assetInteraction={assetMultiSelectManager}
-        onIntersected={loadNextPage}
-        showArchiveIcon={true}
-        {viewport}
-        onReload={onSearchQueryUpdate}
-        slidingWindowOffset={searchResultsElement.offsetTop}
-      />
-    {:else if !isLoading}
-      <div class="flex min-h-[calc(66vh-11rem)] w-full place-content-center items-center dark:text-white">
-        <div class="flex flex-col content-center items-center text-center">
-          <Icon icon={mdiImageOffOutline} size="3.5em" />
-          <p class="mt-5 text-3xl font-medium">{$t('no_results')}</p>
-          <p class="text-base font-normal">{$t('no_results_description')}</p>
+{#if isSceneLabelSearch}
+  <main class="relative z-0 h-dvh overflow-hidden px-2 md:px-6 pt-(--navbar-height)">
+    <Timeline
+      enableRouting={true}
+      bind:timelineManager
+      options={sceneTimelineOptions}
+      assetInteraction={assetMultiSelectManager}
+      showArchiveIcon={true}
+      withStacked
+      onEscape={handleEscape}
+    >
+      {#snippet empty()}
+        <div class="flex min-h-[calc(66vh-11rem)] w-full place-content-center items-center dark:text-white">
+          <div class="flex flex-col content-center items-center text-center">
+            <Icon icon={mdiImageOffOutline} size="3.5em" />
+            <p class="mt-5 text-3xl font-medium">{$t('no_results')}</p>
+            <p class="text-base font-normal">{$t('no_results_description')}</p>
+          </div>
         </div>
-      </div>
-    {/if}
+      {/snippet}
+    </Timeline>
+  </main>
+{:else}
+  <section
+    class="mb-12 bg-immich-bg dark:bg-immich-dark-bg m-4 max-h-screen"
+    bind:clientHeight={viewport.height}
+    bind:clientWidth={viewport.width}
+    bind:this={searchResultsElement}
+  >
+    <section id="search-content">
+      {#if searchResultAssets.length > 0}
+        <GalleryViewer
+          assets={searchResultAssets}
+          assetInteraction={assetMultiSelectManager}
+          onIntersected={loadNextPage}
+          showArchiveIcon={true}
+          {viewport}
+          onReload={onSearchQueryUpdate}
+          slidingWindowOffset={searchResultsElement.offsetTop}
+        />
+      {:else if !isLoading}
+        <div class="flex min-h-[calc(66vh-11rem)] w-full place-content-center items-center dark:text-white">
+          <div class="flex flex-col content-center items-center text-center">
+            <Icon icon={mdiImageOffOutline} size="3.5em" />
+            <p class="mt-5 text-3xl font-medium">{$t('no_results')}</p>
+            <p class="text-base font-normal">{$t('no_results_description')}</p>
+          </div>
+        </div>
+      {/if}
 
-    {#if isLoading}
-      <div class="flex justify-center py-16 items-center">
-        <LoadingSpinner size="giant" />
-      </div>
-    {/if}
+      {#if isLoading}
+        <div class="flex justify-center py-16 items-center">
+          <LoadingSpinner size="giant" />
+        </div>
+      {/if}
+    </section>
   </section>
+{/if}
 
-  <section>
-    {#if assetMultiSelectManager.selectionActive}
-      <div class="fixed top-0 start-0 w-full z-2">
+<section>
+  {#if assetMultiSelectManager.selectionActive}
+    <div class="fixed top-0 start-0 w-full z-2">
+      {#if isSceneLabelSearch}
+        <AssetSelectControlBar>
+          {@const Actions = getAssetBulkActions($t)}
+          <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
+
+          <CreateSharedLink />
+          <SelectAllAssets {timelineManager} assetInteraction={assetMultiSelectManager} />
+          <ActionButton action={Actions.AddToAlbum} />
+          <FavoriteAction
+            removeFavorite={assetMultiSelectManager.isAllFavorite}
+            onFavorite={(ids, isFavorite) => timelineManager.update(ids, (asset) => (asset.isFavorite = isFavorite))}
+          />
+          <ButtonContextMenu icon={mdiDotsVertical} title={$t('menu')}>
+            <ActionMenuItem action={Actions.AddToAlbum} />
+            <DownloadAction menuItem />
+            <ChangeDate menuItem />
+            <ChangeDescription menuItem />
+            <ChangeLocation menuItem />
+            <ArchiveAction
+              menuItem
+              unarchive={assetMultiSelectManager.isAllArchived}
+              onArchive={(ids, visibility) => timelineManager.update(ids, (asset) => (asset.visibility = visibility))}
+            />
+            {#if $preferences.tags.enabled && assetMultiSelectManager.isAllUserOwned}
+              <TagAction menuItem />
+            {/if}
+            <SetVisibilityAction menuItem onVisibilitySet={handleTimelineSetVisibility} />
+            <DeleteAssets menuItem onAssetDelete={handleTimelineAssetsRemove} onUndoDelete={handleTimelineUndoDelete} />
+            <hr />
+            <ActionMenuItem action={Actions.RegenerateThumbnailJob} />
+            <ActionMenuItem action={Actions.RefreshMetadataJob} />
+            <ActionMenuItem action={Actions.TranscodeVideoJob} />
+          </ButtonContextMenu>
+        </AssetSelectControlBar>
+      {:else}
         <AssetSelectControlBar>
           {@const Actions = getAssetBulkActions($t)}
           <CommandPaletteDefaultProvider name={$t('assets')} actions={Object.values(Actions)} />
@@ -366,16 +474,24 @@
             <DownloadAction />
           {/if}
         </AssetSelectControlBar>
-      </div>
-    {:else}
-      <div class="fixed top-0 start-0 w-full z-2">
-        <ControlAppBar onClose={() => goto(previousRoute)} backIcon={mdiArrowLeft}>
-          <div class="absolute bg-light"></div>
+      {/if}
+    </div>
+  {:else}
+    <div class="fixed top-0 start-0 w-full z-2">
+      <ControlAppBar onClose={() => goto(previousRoute)} backIcon={mdiArrowLeft}>
+        <div class="absolute bg-light"></div>
+        {#if isSceneLabelSearch && typeof terms.sceneLabel === 'string'}
+          <div class="flex w-full items-center justify-center px-4">
+            <h1 class="truncate text-lg font-medium dark:text-immich-dark-fg">
+              {getSceneLabel(terms.sceneLabel, $t)}
+            </h1>
+          </div>
+        {:else}
           <div class="w-full flex-1 ps-4">
             <SearchBar grayTheme={false} value={terms?.query ?? ''} searchQuery={terms} />
           </div>
-        </ControlAppBar>
-      </div>
-    {/if}
-  </section>
+        {/if}
+      </ControlAppBar>
+    </div>
+  {/if}
 </section>

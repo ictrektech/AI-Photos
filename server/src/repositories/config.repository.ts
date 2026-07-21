@@ -107,6 +107,12 @@ export interface EnvData {
     allow: boolean;
   };
 
+  defaultAdmin?: {
+    email?: string;
+    password?: string;
+    name: string;
+  };
+
   telemetry: {
     apiPort: number;
     microservicesPort: number;
@@ -363,6 +369,15 @@ const getEnv = (): EnvData => {
     setup: {
       allow: dto.IMMICH_ALLOW_SETUP ?? true,
     },
+
+    defaultAdmin:
+      dto.IMMICH_ADMIN_EMAIL || dto.IMMICH_ADMIN_PASSWORD
+        ? {
+            email: dto.IMMICH_ADMIN_EMAIL,
+            password: dto.IMMICH_ADMIN_PASSWORD,
+            name: dto.IMMICH_ADMIN_NAME || 'admin',
+          }
+        : undefined,
 
     storage: {
       ignoreMountCheckErrors: !!dto.IMMICH_IGNORE_MOUNT_CHECK_ERRORS,

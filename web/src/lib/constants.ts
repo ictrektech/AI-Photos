@@ -66,7 +66,6 @@ export enum OpenQueryParam {
   JOB = 'job',
   STORAGE_TEMPLATE = 'storage-template',
   NOTIFICATIONS = 'notifications',
-  PURCHASE_SETTINGS = 'user-purchase-settings',
 }
 
 export const maximumLengthSearchPeople = 1000;

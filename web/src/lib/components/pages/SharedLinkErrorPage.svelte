@@ -4,7 +4,7 @@
 </script>
 
 <svelte:head>
-  <title>{$t('error')} - Immich</title>
+  <title>{$t('error')} - Photos</title>
 </svelte:head>
 
 <section class="flex flex-col px-4 h-dvh w-dvw place-content-center place-items-center">

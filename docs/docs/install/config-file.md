@@ -125,7 +125,7 @@ The default configuration looks like this:
     },
     "clip": {
       "enabled": true,
-      "modelName": "ViT-B-32__openai"
+      "modelName": "ViT-B-16-SigLIP2__webli"
     },
     "duplicateDetection": {
       "enabled": true,
@@ -144,7 +144,7 @@ The default configuration looks like this:
       "maxResolution": 736,
       "minDetectionScore": 0.5,
       "minRecognitionScore": 0.8,
-      "modelName": "PP-OCRv5_mobile"
+      "modelName": "PP-OCRv5_server"
     },
     "urls": ["http://immich-machine-learning:3003"]
   },

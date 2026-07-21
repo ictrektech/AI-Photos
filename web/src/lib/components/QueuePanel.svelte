@@ -75,6 +75,11 @@
       missingText: $t('missing'),
       disabled: !featureFlags.ocr,
     },
+    [QueueName.SceneClassification]: {
+      allText: $t('reset'),
+      missingText: $t('missing'),
+      disabled: !featureFlags.sceneClassification,
+    },
     [QueueName.VideoConversion]: {
       allText: $t('all'),
       missingText: $t('missing'),
@@ -98,6 +103,15 @@
       case QueueName.FacialRecognition: {
         if (dto.force) {
           const confirmed = await modalManager.showDialog({ prompt: $t('admin.confirm_reprocess_all_faces') });
+          if (!confirmed) {
+            return;
+          }
+          break;
+        }
+      }
+      case QueueName.SceneClassification: {
+        if (dto.force) {
+          const confirmed = await modalManager.showDialog({ prompt: $t('admin.confirm_reprocess_all_scenes') });
           if (!confirmed) {
             return;
           }

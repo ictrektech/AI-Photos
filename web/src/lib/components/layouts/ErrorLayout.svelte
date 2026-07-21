@@ -9,7 +9,6 @@
     Icon,
     IconButton,
     Link,
-    Logo,
     Text,
     VStack,
   } from '@immich/ui';
@@ -34,9 +33,7 @@
 <div class="flex flex-col h-dvh w-dvw">
   <section>
     <div class="flex place-items-center border-b px-6 py-4 dark:border-b-immich-dark-gray">
-      <Link href="/photos">
-        <Logo variant="inline" />
-      </Link>
+      <Link href="/photos">Photos</Link>
     </div>
   </section>
 

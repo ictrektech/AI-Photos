@@ -247,6 +247,11 @@ export const asQueueItem = ($t: MessageFormatter, queue: { name: QueueName }): Q
       icon: mdiPencil,
       title: $t('editor'),
     },
+    [QueueName.SceneClassification]: {
+      icon: mdiImageSearch,
+      title: $t('admin.machine_learning_scene_classification'),
+      subtitle: $t('admin.scene_classification_job_description'),
+    },
   };
 
   return items[queue.name];

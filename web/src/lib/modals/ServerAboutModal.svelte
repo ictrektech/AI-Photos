@@ -15,14 +15,13 @@
   let { onClose, info, versions }: Props = $props();
 </script>
 
-<Modal title={$t('about')} {onClose}>
+<Modal title={$t('about')} icon={false} {onClose}>
   <ModalBody>
     <div class="flex flex-col sm:grid sm:grid-cols-2 gap-4">
       {#if info.sourceRef === 'main' && info.repository === 'immich-app/immich'}
         <Alert color="warning" title={$t('main_branch_warning')} class="col-span-full" size="small" />
       {/if}
 
-      <ServerAboutItem id="immich" title="Immich" version={info.version} versionHref={info.versionUrl} />
       <ServerAboutItem id="exif" title="ExifTool" version={info.exiftool} />
       <ServerAboutItem id="nodejs" title="Node.js" version={info.nodejs} />
       <ServerAboutItem id="libvips" title="Libvips" version={info.libvips} />
@@ -38,24 +37,6 @@
         version={info.ffmpeg}
         class={(info.ffmpeg?.length || 0) > 10 ? 'col-span-2' : ''}
       />
-
-      {#if info.repository && info.repositoryUrl}
-        <ServerAboutItem
-          id="repository"
-          title={$t('repository')}
-          version={info.repository}
-          versionHref={info.repositoryUrl}
-        />
-      {/if}
-
-      {#if info.sourceRef && info.sourceCommit && info.sourceUrl}
-        <ServerAboutItem
-          id="source"
-          title={$t('source')}
-          version="{info.sourceRef}@{info.sourceCommit.slice(0, 9)}"
-          versionHref={info.sourceUrl}
-        />
-      {/if}
 
       {#if info.build && info.buildUrl}
         <ServerAboutItem id="build" title={$t('build')} version={info.build} versionHref={info.buildUrl} />

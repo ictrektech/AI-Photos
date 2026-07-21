@@ -1,5 +1,7 @@
-import { SystemMetadataKey } from 'src/enum';
+import { SystemMetadataKey, UserMetadataKey } from 'src/enum';
 import { ServerService } from 'src/services/server.service';
+import { UserFactory } from 'test/factories/user.factory';
+import { mockEnvData } from 'test/repositories/config.repository.mock';
 import { newTestService, ServiceMocks } from 'test/utils';
 
 describe(ServerService.name, () => {
@@ -12,6 +14,84 @@ describe(ServerService.name, () => {
 
   it('should work', () => {
     expect(sut).toBeDefined();
+  });
+
+  describe('onBootstrap', () => {
+    it('should create a default admin account when configured and no admin exists', async () => {
+      mocks.config.getEnv.mockReturnValue(
+        mockEnvData({
+          defaultAdmin: {
+            email: 'admin@example.com',
+            password: 'password',
+            name: 'Admin',
+          },
+        }),
+      );
+      mocks.user.getAdmin.mockResolvedValue(void 0);
+      mocks.user.getByEmail.mockResolvedValue(void 0);
+      const defaultAdmin = UserFactory.create({ id: 'admin-id', isAdmin: true, email: 'admin@example.com' });
+      mocks.user.create.mockResolvedValue(defaultAdmin);
+
+      await sut.onBootstrap();
+
+      expect(mocks.user.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          isAdmin: true,
+          email: 'admin@example.com',
+          name: 'Admin',
+          password: 'password (hashed)',
+          shouldChangePassword: false,
+          storageLabel: 'admin',
+        }),
+      );
+      expect(mocks.systemMetadata.set).toHaveBeenCalledWith(SystemMetadataKey.AdminOnboarding, { isOnboarded: true });
+      expect(mocks.user.upsertMetadata).toHaveBeenCalledWith(defaultAdmin.id, {
+        key: UserMetadataKey.Onboarding,
+        value: { isOnboarded: true },
+      });
+    });
+
+    it('should skip default admin creation when no default admin is configured', async () => {
+      await sut.onBootstrap();
+
+      expect(mocks.user.getAdmin).not.toHaveBeenCalled();
+      expect(mocks.user.create).not.toHaveBeenCalled();
+    });
+
+    it('should skip default admin creation when an admin already exists', async () => {
+      mocks.config.getEnv.mockReturnValue(
+        mockEnvData({
+          defaultAdmin: {
+            email: 'admin@example.com',
+            password: 'password',
+            name: 'Admin',
+          },
+        }),
+      );
+      mocks.user.getAdmin.mockResolvedValue(UserFactory.create({ isAdmin: true }));
+
+      await sut.onBootstrap();
+
+      expect(mocks.user.create).not.toHaveBeenCalled();
+      expect(mocks.systemMetadata.set).not.toHaveBeenCalledWith(SystemMetadataKey.AdminOnboarding, { isOnboarded: true });
+      expect(mocks.user.upsertMetadata).not.toHaveBeenCalled();
+    });
+
+    it('should skip default admin creation when default admin config is incomplete', async () => {
+      mocks.config.getEnv.mockReturnValue(
+        mockEnvData({
+          defaultAdmin: {
+            email: 'admin@example.com',
+            name: 'Admin',
+          },
+        }),
+      );
+
+      await sut.onBootstrap();
+
+      expect(mocks.user.getAdmin).not.toHaveBeenCalled();
+      expect(mocks.user.create).not.toHaveBeenCalled();
+    });
   });
 
   describe('getStorage', () => {
@@ -148,6 +228,7 @@ describe(ServerService.name, () => {
         configFile: false,
         trash: true,
         email: false,
+        sceneClassification: true,
       });
       expect(mocks.systemMetadata.get).toHaveBeenCalled();
     });

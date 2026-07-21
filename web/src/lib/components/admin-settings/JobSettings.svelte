@@ -24,6 +24,7 @@
     QueueName.StorageTemplateMigration,
     QueueName.Migration,
     QueueName.Ocr,
+    QueueName.SceneClassification,
   ];
 
   function isSystemConfigJobDto(jobName: string): jobName is keyof SystemConfigJobDto {
@@ -49,6 +50,7 @@
     [QueueName.Ocr]: $t('admin.machine_learning_ocr'),
     [QueueName.Workflow]: $t('workflows'),
     [QueueName.Editor]: $t('editor'),
+    [QueueName.SceneClassification]: $t('admin.machine_learning_scene_classification'),
   });
 </script>
 

@@ -1,6 +1,6 @@
 /**
  * Immich
- * 2.7.5
+ * 2.8.1
  * DO NOT MODIFY - This file has been generated using oazapfts.
  * See https://www.npmjs.com/package/oazapfts
  */
@@ -1279,6 +1279,7 @@ export type QueuesResponseLegacyDto = {
     migration: QueueResponseLegacyDto;
     notifications: QueueResponseLegacyDto;
     ocr: QueueResponseLegacyDto;
+    sceneClassification: QueueResponseLegacyDto;
     search: QueueResponseLegacyDto;
     sidecar: QueueResponseLegacyDto;
     smartSearch: QueueResponseLegacyDto;
@@ -1728,6 +1729,8 @@ export type MetadataSearchDto = {
     previewPath?: string;
     /** Filter by rating [1-5], or null for unrated */
     rating?: number | null;
+    /** Filter by scene label */
+    sceneLabel?: string;
     /** Number of results to return */
     size?: number;
     /** Filter by state/province name */
@@ -1844,6 +1847,8 @@ export type RandomSearchDto = {
     personIds?: string[];
     /** Filter by rating [1-5], or null for unrated */
     rating?: number | null;
+    /** Filter by scene label */
+    sceneLabel?: string;
     /** Number of results to return */
     size?: number;
     /** Filter by state/province name */
@@ -1920,6 +1925,8 @@ export type SmartSearchDto = {
     queryAssetId?: string;
     /** Filter by rating [1-5], or null for unrated */
     rating?: number | null;
+    /** Filter by scene label */
+    sceneLabel?: string;
     /** Number of results to return */
     size?: number;
     /** Filter by state/province name */
@@ -1986,6 +1993,8 @@ export type StatisticsSearchDto = {
     personIds?: string[];
     /** Filter by rating [1-5], or null for unrated */
     rating?: number | null;
+    /** Filter by scene label */
+    sceneLabel?: string;
     /** Filter by state/province name */
     state?: string | null;
     /** Filter by tag IDs */
@@ -2112,6 +2121,8 @@ export type ServerFeaturesDto = {
     passwordLogin: boolean;
     /** Whether reverse geocoding is enabled */
     reverseGeocoding: boolean;
+    /** Whether scene classification is enabled */
+    sceneClassification: boolean;
     /** Whether search is enabled */
     search: boolean;
     /** Whether sidecar files are supported */
@@ -2496,6 +2507,7 @@ export type SystemConfigJobDto = {
     migration: JobSettingsDto;
     notifications: JobSettingsDto;
     ocr: JobSettingsDto;
+    sceneClassification: JobSettingsDto;
     search: JobSettingsDto;
     sidecar: JobSettingsDto;
     smartSearch: JobSettingsDto;
@@ -2563,6 +2575,16 @@ export type OcrConfig = {
     /** Name of the model to use */
     modelName: string;
 };
+export type SceneClassificationConfig = {
+    /** Whether the task is enabled */
+    enabled: boolean;
+    /** Minimum number of assets per scene label to show in explore page */
+    minAssetsPerField: number;
+    /** Minimum confidence score for scene classification */
+    minScore: number;
+    /** Number of top labels to store per asset */
+    topLabels: number;
+};
 export type SystemConfigMachineLearningDto = {
     availabilityChecks: MachineLearningAvailabilityChecksDto;
     clip: ClipConfig;
@@ -2571,6 +2593,7 @@ export type SystemConfigMachineLearningDto = {
     enabled: boolean;
     facialRecognition: FacialRecognitionConfig;
     ocr: OcrConfig;
+    sceneClassification: SceneClassificationConfig;
     urls: string[];
 };
 export type SystemConfigMapDto = {
@@ -5465,7 +5488,7 @@ export function getExploreData(opts?: Oazapfts.RequestOpts) {
 /**
  * Search large assets
  */
-export function searchLargeAssets({ albumIds, city, country, createdAfter, createdBefore, deviceId, isEncoded, isFavorite, isMotion, isNotInAlbum, isOffline, lensModel, libraryId, make, minFileSize, model, ocr, personIds, rating, size, state, tagIds, takenAfter, takenBefore, trashedAfter, trashedBefore, $type, updatedAfter, updatedBefore, visibility, withDeleted, withExif }: {
+export function searchLargeAssets({ albumIds, city, country, createdAfter, createdBefore, deviceId, isEncoded, isFavorite, isMotion, isNotInAlbum, isOffline, lensModel, libraryId, make, minFileSize, model, ocr, personIds, rating, sceneLabel, size, state, tagIds, takenAfter, takenBefore, trashedAfter, trashedBefore, $type, updatedAfter, updatedBefore, visibility, withDeleted, withExif }: {
     albumIds?: string[];
     city?: string | null;
     country?: string | null;
@@ -5485,6 +5508,7 @@ export function searchLargeAssets({ albumIds, city, country, createdAfter, creat
     ocr?: string;
     personIds?: string[];
     rating?: number | null;
+    sceneLabel?: string;
     size?: number;
     state?: string | null;
     tagIds?: string[] | null;
@@ -5522,6 +5546,7 @@ export function searchLargeAssets({ albumIds, city, country, createdAfter, creat
         ocr,
         personIds,
         rating,
+        sceneLabel,
         size,
         state,
         tagIds,
@@ -5601,6 +5626,26 @@ export function searchRandom({ randomSearchDto }: {
         method: "POST",
         body: randomSearchDto
     })));
+}
+/**
+ * Retrieve scene classification data
+ */
+export function getSceneData(opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchJson<{
+        status: 200;
+        data: SearchExploreResponseDto[];
+    }>("/search/scenes", {
+        ...opts
+    }));
+}
+/**
+ * Reclassify all assets
+ */
+export function reclassifyAllScenes(opts?: Oazapfts.RequestOpts) {
+    return oazapfts.ok(oazapfts.fetchText("/search/scenes/reclassify", {
+        ...opts,
+        method: "POST"
+    }));
 }
 /**
  * Smart asset search
@@ -6446,7 +6491,7 @@ export function tagAssets({ id, bulkIdsDto }: {
 /**
  * Get time bucket
  */
-export function getTimeBucket({ albumId, bbox, isFavorite, isTrashed, key, order, personId, slug, tagId, timeBucket, userId, visibility, withCoordinates, withPartners, withStacked }: {
+export function getTimeBucket({ albumId, bbox, isFavorite, isTrashed, key, order, personId, sceneLabel, slug, tagId, timeBucket, userId, visibility, withCoordinates, withPartners, withStacked }: {
     albumId?: string;
     bbox?: string;
     isFavorite?: boolean;
@@ -6454,6 +6499,7 @@ export function getTimeBucket({ albumId, bbox, isFavorite, isTrashed, key, order
     key?: string;
     order?: AssetOrder;
     personId?: string;
+    sceneLabel?: string;
     slug?: string;
     tagId?: string;
     timeBucket: string;
@@ -6474,6 +6520,7 @@ export function getTimeBucket({ albumId, bbox, isFavorite, isTrashed, key, order
         key,
         order,
         personId,
+        sceneLabel,
         slug,
         tagId,
         timeBucket,
@@ -6489,7 +6536,7 @@ export function getTimeBucket({ albumId, bbox, isFavorite, isTrashed, key, order
 /**
  * Get time buckets
  */
-export function getTimeBuckets({ albumId, bbox, isFavorite, isTrashed, key, order, personId, slug, tagId, userId, visibility, withCoordinates, withPartners, withStacked }: {
+export function getTimeBuckets({ albumId, bbox, isFavorite, isTrashed, key, order, personId, sceneLabel, slug, tagId, userId, visibility, withCoordinates, withPartners, withStacked }: {
     albumId?: string;
     bbox?: string;
     isFavorite?: boolean;
@@ -6497,6 +6544,7 @@ export function getTimeBuckets({ albumId, bbox, isFavorite, isTrashed, key, orde
     key?: string;
     order?: AssetOrder;
     personId?: string;
+    sceneLabel?: string;
     slug?: string;
     tagId?: string;
     userId?: string;
@@ -6516,6 +6564,7 @@ export function getTimeBuckets({ albumId, bbox, isFavorite, isTrashed, key, orde
         key,
         order,
         personId,
+        sceneLabel,
         slug,
         tagId,
         userId,
@@ -7150,6 +7199,7 @@ export enum QueueName {
     Notifications = "notifications",
     BackupDatabase = "backupDatabase",
     Ocr = "ocr",
+    SceneClassification = "sceneClassification",
     Workflow = "workflow",
     Editor = "editor"
 }
@@ -7245,6 +7295,8 @@ export enum JobName {
     VersionCheck = "VersionCheck",
     OcrQueueAll = "OcrQueueAll",
     Ocr = "Ocr",
+    SceneClassificationQueueAll = "SceneClassificationQueueAll",
+    SceneClassification = "SceneClassification",
     WorkflowRun = "WorkflowRun"
 }
 export enum SearchSuggestionType {

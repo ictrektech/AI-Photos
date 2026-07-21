@@ -81,6 +81,12 @@ export type SystemConfig = {
       minRecognitionScore: number;
       maxResolution: number;
     };
+    sceneClassification: {
+      enabled: boolean;
+      minScore: number;
+      topLabels: number;
+      minAssetsPerField: number;
+    };
   };
   map: {
     enabled: boolean;
@@ -235,6 +241,7 @@ export const defaults = Object.freeze<SystemConfig>({
     [QueueName.VideoConversion]: { concurrency: 1 },
     [QueueName.Notification]: { concurrency: 5 },
     [QueueName.Ocr]: { concurrency: 1 },
+    [QueueName.SceneClassification]: { concurrency: 2 },
     [QueueName.Workflow]: { concurrency: 5 },
     [QueueName.Editor]: { concurrency: 2 },
   },
@@ -244,7 +251,7 @@ export const defaults = Object.freeze<SystemConfig>({
   },
   machineLearning: {
     enabled: process.env.IMMICH_MACHINE_LEARNING_ENABLED !== 'false',
-    urls: [process.env.IMMICH_MACHINE_LEARNING_URL || 'http://immich-machine-learning:3003'],
+    urls: [process.env.IMMICH_MACHINE_LEARNING_URL || 'http://172.17.0.1:3003'],
     availabilityChecks: {
       enabled: true,
       timeout: Number(process.env.IMMICH_MACHINE_LEARNING_PING_TIMEOUT) || 2000,
@@ -252,7 +259,7 @@ export const defaults = Object.freeze<SystemConfig>({
     },
     clip: {
       enabled: true,
-      modelName: 'ViT-B-32__openai',
+      modelName: 'ViT-B-16-SigLIP2__webli',
     },
     duplicateDetection: {
       enabled: true,
@@ -261,16 +268,22 @@ export const defaults = Object.freeze<SystemConfig>({
     facialRecognition: {
       enabled: true,
       modelName: 'buffalo_l',
-      minScore: 0.7,
+      minScore: 0.85,
       maxDistance: 0.5,
       minFaces: 3,
     },
     ocr: {
       enabled: true,
-      modelName: 'PP-OCRv5_mobile',
+      modelName: 'PP-OCRv5_server',
       minDetectionScore: 0.5,
       minRecognitionScore: 0.8,
       maxResolution: 736,
+    },
+    sceneClassification: {
+      enabled: true,
+      minScore: 0.3,
+      topLabels: 2,
+      minAssetsPerField: 2,
     },
   },
   map: {
@@ -337,7 +350,7 @@ export const defaults = Object.freeze<SystemConfig>({
     },
   },
   newVersionCheck: {
-    enabled: true,
+    enabled: false,
   },
   nightlyTasks: {
     startTime: '00:00',

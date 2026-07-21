@@ -62,12 +62,10 @@ export const Route = {
   viewAlbumAsset: ({ albumId, assetId }: { albumId: string; assetId: string }) =>
     `/albums/${albumId}/photos/${assetId}`,
 
-  // buy
-  buy: () => '/buy',
-
   // explore
   explore: () => '/explore',
   places: () => '/places',
+  scenes: () => '/scenes',
 
   // folders
   folders: (params?: { path?: string }) => '/folders' + asQueryString(params),

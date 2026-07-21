@@ -1,9 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsString } from 'class-validator';
 import type { BBoxDto } from 'src/dtos/bbox.dto';
 import { AssetOrder, AssetVisibility } from 'src/enum';
 import { ValidateBBox } from 'src/utils/bbox';
-import { ValidateBoolean, ValidateEnum, ValidateUUID } from 'src/validation';
+import { Optional, ValidateBoolean, ValidateEnum, ValidateUUID } from 'src/validation';
 
 export class TimeBucketDto {
   @ValidateUUID({ optional: true, description: 'Filter assets by specific user ID' })
@@ -17,6 +17,12 @@ export class TimeBucketDto {
 
   @ValidateUUID({ optional: true, description: 'Filter assets with a specific tag' })
   tagId?: string;
+
+  @ApiPropertyOptional({ description: 'Filter assets by scene label' })
+  @IsString()
+  @IsNotEmpty()
+  @Optional()
+  sceneLabel?: string;
 
   @ValidateBoolean({
     optional: true,

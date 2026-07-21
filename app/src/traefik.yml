@@ -1,0 +1,16 @@
+# Traefik File Provider dynamic config — AI Album fallback route
+#
+# The app menu entry uses routers.yml `embed: false` + `http://self:2283/`
+# to open in a new window.
+#
+# This prefix forwarding is kept as a fallback for connectivity debugging.
+http:
+  routers:
+    com-example-ai-album-web:
+      rule: "PathPrefix(`/app/com.example.ai-album`)"
+      service: com-example-ai-album-web
+  services:
+    com-example-ai-album-web:
+      loadBalancer:
+        servers:
+          - url: "http://172.17.0.1:2283"

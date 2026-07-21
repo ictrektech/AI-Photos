@@ -532,7 +532,9 @@ const newMockRepository = <T>(key: ClassConstructor<T>) => {
     }
 
     case MachineLearningRepository: {
-      return automock(MachineLearningRepository, { args: [{ setContext: () => {} }] });
+      return automock(MachineLearningRepository, {
+        args: [{ setContext: () => {} }, { emit: () => Promise.resolve() } as unknown as EventRepository],
+      });
     }
 
     case StorageRepository: {

@@ -173,7 +173,7 @@ services:
     volumes:
       - ${UPLOAD_LOCATION}/postgres:/var/lib/postgresql/data
     ports:
-      - 5432:5432
+      - 5433:5432
     shm_size: 128mb
     healthcheck:
       disable: false
@@ -181,7 +181,7 @@ services:
   # immich-prometheus:
   #   container_name: immich_prometheus
   #   ports:
-  #     - 9090:9090
+  #     - 9091:9090
   #   image: prom/prometheus
   #   volumes:
   #     - ./prometheus.yml:/etc/prometheus/prometheus.yml

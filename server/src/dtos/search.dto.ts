@@ -124,6 +124,12 @@ class BaseSearchDto {
   @IsNotEmpty()
   @Optional()
   ocr?: string;
+
+  @ApiPropertyOptional({ description: 'Filter by scene label' })
+  @IsString()
+  @IsNotEmpty()
+  @Optional()
+  sceneLabel?: string;
 }
 
 class BaseSearchWithResultsDto extends BaseSearchDto {

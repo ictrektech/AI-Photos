@@ -12,12 +12,11 @@
   import { handleDownloadAlbum } from '$lib/services/album.service';
   import { getGlobalActions } from '$lib/services/app.service';
   import { dragAndDropFilesStore } from '$lib/stores/drag-and-drop-files.store';
-  import { mediaQueryManager } from '$lib/stores/media-query-manager.svelte';
   import { SlideshowNavigation, SlideshowState, slideshowStore } from '$lib/stores/slideshow.store';
   import { handlePromiseError } from '$lib/utils';
   import { fileUploadHandler, openFileUploadDialog } from '$lib/utils/file-uploader';
   import type { AlbumResponseDto, SharedLinkResponseDto } from '@immich/sdk';
-  import { ActionButton, IconButton, Logo } from '@immich/ui';
+  import { ActionButton, IconButton } from '@immich/ui';
   import { mdiDownload, mdiFileImagePlusOutline, mdiPresentationPlay } from '@mdi/js';
   import { t } from 'svelte-i18n';
   import ControlAppBar from '../shared-components/control-app-bar.svelte';
@@ -105,9 +104,7 @@
   {:else}
     <ControlAppBar showBackButton={false}>
       {#snippet leading()}
-        <a data-sveltekit-preload-data="hover" class="ms-4" href="/">
-          <Logo variant={mediaQueryManager.maxMd ? 'icon' : 'inline'} class="min-w-10" />
-        </a>
+        <a data-sveltekit-preload-data="hover" class="ms-4 font-semibold text-primary" href="/">Photos</a>
       {/snippet}
 
       {#snippet trailing()}

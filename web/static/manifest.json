@@ -1,31 +1,12 @@
 {
   "background_color": "#ffffff",
-  "description": "Self-hosted photo and video backup solution directly from your mobile phone.",
+  "description": "Self-hosted photo and video backup solution.",
   "dir": "auto",
   "display": "standalone",
-  "icons": [
-    {
-      "purpose": "any",
-      "sizes": "192x192",
-      "src": "manifest-icon-192.maskable.png",
-      "type": "image/png"
-    },
-    {
-      "purpose": "any",
-      "sizes": "512x512",
-      "src": "manifest-icon-512.maskable.png",
-      "type": "image/png"
-    },
-    {
-      "purpose": "maskable",
-      "sizes": "512x512",
-      "src": "manifest-icon-512.maskable.png",
-      "type": "image/png"
-    }
-  ],
+  "icons": [],
   "lang": "en",
-  "name": "Immich",
-  "short_name": "Immich",
+  "name": "Photos",
+  "short_name": "Photos",
   "shortcuts": [
     {
       "name": "Photos",

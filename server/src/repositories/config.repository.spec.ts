@@ -10,6 +10,9 @@ const resetEnv = () => {
   for (const env of [
     'IMMICH_ALLOW_EXTERNAL_PLUGINS',
     'IMMICH_ALLOW_SETUP',
+    'IMMICH_ADMIN_EMAIL',
+    'IMMICH_ADMIN_PASSWORD',
+    'IMMICH_ADMIN_NAME',
     'IMMICH_ENV',
     'IMMICH_WORKERS_INCLUDE',
     'IMMICH_WORKERS_EXCLUDE',
@@ -112,6 +115,35 @@ describe('getEnv', () => {
     it('should throw an error for invalid value', () => {
       process.env.IMMICH_ALLOW_SETUP = 'invalid';
       expect(() => getEnv()).toThrowError('IMMICH_ALLOW_SETUP must be a boolean value');
+    });
+  });
+
+  describe('default admin', () => {
+    it('should use default admin settings when provided', () => {
+      process.env.IMMICH_ADMIN_EMAIL = 'admin@example.com';
+      process.env.IMMICH_ADMIN_PASSWORD = 'password';
+      process.env.IMMICH_ADMIN_NAME = 'Admin';
+
+      const { defaultAdmin } = getEnv();
+
+      expect(defaultAdmin).toEqual({
+        email: 'admin@example.com',
+        password: 'password',
+        name: 'Admin',
+      });
+    });
+
+    it('should use the default admin name', () => {
+      process.env.IMMICH_ADMIN_EMAIL = 'admin@example.com';
+      process.env.IMMICH_ADMIN_PASSWORD = 'password';
+
+      const { defaultAdmin } = getEnv();
+
+      expect(defaultAdmin).toEqual({
+        email: 'admin@example.com',
+        password: 'password',
+        name: 'admin',
+      });
     });
   });
 

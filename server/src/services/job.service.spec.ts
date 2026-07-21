@@ -74,10 +74,6 @@ describe(JobService.name, () => {
         stub: [AssetFactory.create({ id: 'asset-1', type: AssetType.Video })],
       },
       {
-        item: { name: JobName.SmartSearch, data: { id: 'asset-1' } },
-        jobs: [],
-      },
-      {
         item: { name: JobName.AssetDetectFaces, data: { id: 'asset-1' } },
         jobs: [],
       },
@@ -117,5 +113,35 @@ describe(JobService.name, () => {
         expect(mocks.job.queueAll).not.toHaveBeenCalled();
       });
     }
+  });
+
+  describe('SmartSearch completion', () => {
+    it('should queue SceneClassification after SmartSearch completes (non-upload)', async () => {
+      mocks.job.run.mockResolvedValue(JobStatus.Success);
+
+      await sut.onJobRun(QueueName.SmartSearch, { name: JobName.SmartSearch, data: { id: 'asset-1' } });
+
+      expect(mocks.job.queue).toHaveBeenCalledTimes(1);
+      expect(mocks.job.queue).toHaveBeenCalledWith({ name: JobName.SceneClassification, data: { id: 'asset-1' } });
+    });
+
+    it('should queue AssetDetectDuplicates and SceneClassification after SmartSearch completes (upload)', async () => {
+      mocks.job.run.mockResolvedValue(JobStatus.Success);
+
+      await sut.onJobRun(QueueName.SmartSearch, {
+        name: JobName.SmartSearch,
+        data: { id: 'asset-1', source: 'upload' },
+      });
+
+      expect(mocks.job.queue).toHaveBeenCalledTimes(2);
+      expect(mocks.job.queue).toHaveBeenCalledWith({
+        name: JobName.AssetDetectDuplicates,
+        data: { id: 'asset-1', source: 'upload' },
+      });
+      expect(mocks.job.queue).toHaveBeenCalledWith({
+        name: JobName.SceneClassification,
+        data: { id: 'asset-1', source: 'upload' },
+      });
+    });
   });
 });

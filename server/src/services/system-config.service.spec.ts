@@ -40,6 +40,7 @@ const updatedConfig = Object.freeze<SystemConfig>({
     [QueueName.VideoConversion]: { concurrency: 1 },
     [QueueName.Notification]: { concurrency: 5 },
     [QueueName.Ocr]: { concurrency: 1 },
+    [QueueName.SceneClassification]: { concurrency: 2 },
     [QueueName.Workflow]: { concurrency: 5 },
     [QueueName.Editor]: { concurrency: 2 },
   },
@@ -84,7 +85,7 @@ const updatedConfig = Object.freeze<SystemConfig>({
   },
   machineLearning: {
     enabled: true,
-    urls: ['http://immich-machine-learning:3003'],
+    urls: ['http://172.17.0.1:3003'],
     availabilityChecks: {
       enabled: true,
       interval: 30_000,
@@ -92,7 +93,7 @@ const updatedConfig = Object.freeze<SystemConfig>({
     },
     clip: {
       enabled: true,
-      modelName: 'ViT-B-32__openai',
+      modelName: 'ViT-B-16-SigLIP2__webli',
     },
     duplicateDetection: {
       enabled: true,
@@ -101,16 +102,22 @@ const updatedConfig = Object.freeze<SystemConfig>({
     facialRecognition: {
       enabled: true,
       modelName: 'buffalo_l',
-      minScore: 0.7,
+      minScore: 0.85,
       maxDistance: 0.5,
       minFaces: 3,
     },
     ocr: {
       enabled: true,
-      modelName: 'PP-OCRv5_mobile',
+      modelName: 'PP-OCRv5_server',
       minDetectionScore: 0.5,
       minRecognitionScore: 0.8,
       maxResolution: 736,
+    },
+    sceneClassification: {
+      enabled: true,
+      minScore: 0.3,
+      topLabels: 2,
+      minAssetsPerField: 2,
     },
   },
   map: {
@@ -180,7 +187,7 @@ const updatedConfig = Object.freeze<SystemConfig>({
     extractEmbedded: false,
   },
   newVersionCheck: {
-    enabled: true,
+    enabled: false,
   },
   trash: {
     enabled: true,

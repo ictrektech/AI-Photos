@@ -1,0 +1,69 @@
+services:
+  immich-server:
+    image: immich-server:${IMMICH_SERVER_VERSION:-release}
+    pull_policy: missing
+    restart: unless-stopped
+    ports:
+      - "2283:2283"
+    volumes:
+      - ${APP_STORAGE_PATH}/library:/data
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+      IMMICH_TELEMETRY_INCLUDE: all
+      DB_HOSTNAME: database
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE_NAME: immich
+      REDIS_HOSTNAME: redis
+      TZ: Asia/Shanghai
+    depends_on:
+      - redis
+      - database
+    healthcheck:
+      disable: false
+
+  redis:
+    image: valkey/valkey:${VALKEY_VERSION:-9}
+    pull_policy: missing
+    restart: always
+    healthcheck:
+      test: redis-cli ping || exit 1
+
+  database:
+    image: postgres:${POSTGRES_VERSION:-14}
+    pull_policy: missing
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: immich
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+    volumes:
+      - ${APP_STORAGE_PATH}/postgres:/var/lib/postgresql/data
+    shm_size: 128mb
+    healthcheck:
+      disable: false
+
+  immich-prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION:-latest}
+    pull_policy: missing
+    restart: unless-stopped
+    ports:
+      - "${PROMETHEUS_PORT:-9092}:9090"
+    volumes:
+      - prometheus-data:/prometheus
+
+  immich-grafana:
+    image: grafana/grafana:${GRAFANA_VERSION:-latest}
+    pull_policy: missing
+    restart: unless-stopped
+    command: ['./run.sh', '-disable-reporting']
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  prometheus-data:
+  grafana-data:

@@ -325,6 +325,66 @@
           />
         </div>
       </SettingAccordion>
+
+      <SettingAccordion
+        key="scene-classification"
+        title={$t('admin.machine_learning_scene_classification')}
+        subtitle={$t('admin.machine_learning_scene_classification_description')}
+      >
+        <div class="ml-4 mt-4 flex flex-col gap-4">
+          <SettingSwitch
+            title={$t('admin.machine_learning_scene_classification_enabled')}
+            subtitle={$t('admin.machine_learning_scene_classification_enabled_description')}
+            bind:checked={configToEdit.machineLearning.sceneClassification.enabled}
+            disabled={disabled || !configToEdit.machineLearning.enabled || !configToEdit.machineLearning.clip.enabled}
+            isEdited={configToEdit.machineLearning.sceneClassification.enabled !==
+              config.machineLearning.sceneClassification.enabled}
+          />
+
+          <SettingInputField
+            inputType={SettingInputFieldType.NUMBER}
+            label={$t('admin.machine_learning_scene_classification_min_score')}
+            description={$t('admin.machine_learning_scene_classification_min_score_description')}
+            bind:value={configToEdit.machineLearning.sceneClassification.minScore}
+            step="0.01"
+            min={0}
+            max={1}
+            disabled={disabled ||
+              !configToEdit.machineLearning.enabled ||
+              !configToEdit.machineLearning.sceneClassification.enabled}
+            isEdited={configToEdit.machineLearning.sceneClassification.minScore !==
+              config.machineLearning.sceneClassification.minScore}
+          />
+
+          <SettingInputField
+            inputType={SettingInputFieldType.NUMBER}
+            label={$t('admin.machine_learning_scene_classification_top_labels')}
+            description={$t('admin.machine_learning_scene_classification_top_labels_description')}
+            bind:value={configToEdit.machineLearning.sceneClassification.topLabels}
+            min={1}
+            max={10}
+            disabled={disabled ||
+              !configToEdit.machineLearning.enabled ||
+              !configToEdit.machineLearning.sceneClassification.enabled}
+            isEdited={configToEdit.machineLearning.sceneClassification.topLabels !==
+              config.machineLearning.sceneClassification.topLabels}
+          />
+
+          <SettingInputField
+            inputType={SettingInputFieldType.NUMBER}
+            label={$t('admin.machine_learning_scene_classification_min_assets_per_field')}
+            description={$t('admin.machine_learning_scene_classification_min_assets_per_field_description')}
+            bind:value={configToEdit.machineLearning.sceneClassification.minAssetsPerField}
+            min={1}
+            disabled={disabled ||
+              !configToEdit.machineLearning.enabled ||
+              !configToEdit.machineLearning.sceneClassification.enabled}
+            isEdited={configToEdit.machineLearning.sceneClassification.minAssetsPerField !==
+              config.machineLearning.sceneClassification.minAssetsPerField}
+          />
+        </div>
+      </SettingAccordion>
+
       <SettingButtonsRow bind:configToEdit keys={['machineLearning']} {disabled} />
     </form>
   </div>

@@ -9491,6 +9491,15 @@
             }
           },
           {
+            "name": "sceneLabel",
+            "required": false,
+            "in": "query",
+            "description": "Filter by scene label",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "size",
             "required": false,
             "in": "query",
@@ -9926,6 +9935,95 @@
         ],
         "x-immich-permission": "asset.read",
         "x-immich-state": "Stable"
+      }
+    },
+    "/search/scenes": {
+      "get": {
+        "description": "Returns scene labels with representative asset thumbnails for the explore page.",
+        "operationId": "getSceneData",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SearchExploreResponseDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          },
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Retrieve scene classification data",
+        "tags": [
+          "Search"
+        ],
+        "x-immich-history": [
+          {
+            "version": "v2.8.0",
+            "state": "Added"
+          },
+          {
+            "version": "v2.8.0",
+            "state": "Beta"
+          }
+        ],
+        "x-immich-permission": "asset.read",
+        "x-immich-state": "Beta"
+      }
+    },
+    "/search/scenes/reclassify": {
+      "post": {
+        "description": "Queue all assets for scene re-classification.",
+        "operationId": "reclassifyAllScenes",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          },
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Reclassify all assets",
+        "tags": [
+          "Search"
+        ],
+        "x-immich-admin-only": true,
+        "x-immich-history": [
+          {
+            "version": "v2.8.0",
+            "state": "Added"
+          },
+          {
+            "version": "v2.8.0",
+            "state": "Beta"
+          }
+        ],
+        "x-immich-permission": "queueJob.create",
+        "x-immich-state": "Beta"
       }
     },
     "/search/smart": {
@@ -13592,6 +13690,15 @@
             }
           },
           {
+            "name": "sceneLabel",
+            "required": false,
+            "in": "query",
+            "description": "Filter assets by scene label",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "slug",
             "required": false,
             "in": "query",
@@ -13774,6 +13881,15 @@
             "description": "Filter assets containing a specific person (face recognition)",
             "schema": {
               "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "sceneLabel",
+            "required": false,
+            "in": "query",
+            "description": "Filter assets by scene label",
+            "schema": {
               "type": "string"
             }
           },
@@ -15225,7 +15341,7 @@
   "info": {
     "title": "Immich",
     "description": "Immich API",
-    "version": "2.7.5",
+    "version": "2.8.1",
     "contact": {}
   },
   "tags": [
@@ -18316,6 +18432,8 @@
           "VersionCheck",
           "OcrQueueAll",
           "Ocr",
+          "SceneClassificationQueueAll",
+          "SceneClassification",
           "WorkflowRun"
         ],
         "type": "string"
@@ -19172,6 +19290,10 @@
               }
             ],
             "x-immich-state": "Stable"
+          },
+          "sceneLabel": {
+            "description": "Filter by scene label",
+            "type": "string"
           },
           "size": {
             "description": "Number of results to return",
@@ -20620,6 +20742,7 @@
           "notifications",
           "backupDatabase",
           "ocr",
+          "sceneClassification",
           "workflow",
           "editor"
         ],
@@ -20763,6 +20886,9 @@
           "ocr": {
             "$ref": "#/components/schemas/QueueResponseLegacyDto"
           },
+          "sceneClassification": {
+            "$ref": "#/components/schemas/QueueResponseLegacyDto"
+          },
           "search": {
             "$ref": "#/components/schemas/QueueResponseLegacyDto"
           },
@@ -20797,6 +20923,7 @@
           "migration",
           "notifications",
           "ocr",
+          "sceneClassification",
           "search",
           "sidecar",
           "smartSearch",
@@ -20915,6 +21042,10 @@
               }
             ],
             "x-immich-state": "Stable"
+          },
+          "sceneLabel": {
+            "description": "Filter by scene label",
+            "type": "string"
           },
           "size": {
             "description": "Number of results to return",
@@ -21065,6 +21196,39 @@
         },
         "required": [
           "angle"
+        ],
+        "type": "object"
+      },
+      "SceneClassificationConfig": {
+        "properties": {
+          "enabled": {
+            "description": "Whether the task is enabled",
+            "type": "boolean"
+          },
+          "minAssetsPerField": {
+            "description": "Minimum number of assets per scene label to show in explore page",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "minScore": {
+            "description": "Minimum confidence score for scene classification",
+            "format": "double",
+            "maximum": 1,
+            "minimum": 0,
+            "type": "number"
+          },
+          "topLabels": {
+            "description": "Number of top labels to store per asset",
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled",
+          "minAssetsPerField",
+          "minScore",
+          "topLabels"
         ],
         "type": "object"
       },
@@ -21475,6 +21639,10 @@
             "description": "Whether reverse geocoding is enabled",
             "type": "boolean"
           },
+          "sceneClassification": {
+            "description": "Whether scene classification is enabled",
+            "type": "boolean"
+          },
           "search": {
             "description": "Whether search is enabled",
             "type": "boolean"
@@ -21504,6 +21672,7 @@
           "ocr",
           "passwordLogin",
           "reverseGeocoding",
+          "sceneClassification",
           "search",
           "sidecar",
           "smartSearch",
@@ -22307,6 +22476,10 @@
             ],
             "x-immich-state": "Stable"
           },
+          "sceneLabel": {
+            "description": "Filter by scene label",
+            "type": "string"
+          },
           "size": {
             "description": "Number of results to return",
             "maximum": 1000,
@@ -22557,6 +22730,10 @@
               }
             ],
             "x-immich-state": "Stable"
+          },
+          "sceneLabel": {
+            "description": "Filter by scene label",
+            "type": "string"
           },
           "state": {
             "description": "Filter by state/province name",
@@ -24323,6 +24500,9 @@
           "ocr": {
             "$ref": "#/components/schemas/JobSettingsDto"
           },
+          "sceneClassification": {
+            "$ref": "#/components/schemas/JobSettingsDto"
+          },
           "search": {
             "$ref": "#/components/schemas/JobSettingsDto"
           },
@@ -24351,6 +24531,7 @@
           "migration",
           "notifications",
           "ocr",
+          "sceneClassification",
           "search",
           "sidecar",
           "smartSearch",
@@ -24444,6 +24625,9 @@
           "ocr": {
             "$ref": "#/components/schemas/OcrConfig"
           },
+          "sceneClassification": {
+            "$ref": "#/components/schemas/SceneClassificationConfig"
+          },
           "urls": {
             "format": "uri",
             "items": {
@@ -24461,6 +24645,7 @@
           "enabled",
           "facialRecognition",
           "ocr",
+          "sceneClassification",
           "urls"
         ],
         "type": "object"

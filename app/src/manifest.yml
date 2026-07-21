@@ -1,0 +1,27 @@
+id: com.example.ai-album
+name:
+  zh-CN: AI相册
+  en: AI Album
+description:
+  zh-CN: AI 相册，自建照片与视频管理平台。
+  en: AI-powered self-hosted photo and video management solution.
+version: 2.8.1
+author: example
+category: [other]
+arch: [arm64]
+
+platform:
+  version: ">=3.0.0"
+
+dependencies:
+  apps:
+    - id: com.example.ml-server
+      version: ">=1.5.0, <2.0.0"
+      optional: false
+
+storage:
+  directories:
+    - path: library
+      mode: "0755"
+    - path: postgres
+      mode: "0700"
